@@ -1,4 +1,3 @@
-// --- 1. File Upload (Drag & Drop + Button) ---
 const dropZone = document.getElementById("dropZone");
 const imageInput = document.getElementById("imageInput");
 const addImagesBtn = document.getElementById("addImages");
@@ -7,13 +6,13 @@ const imageContainer = document.getElementById("imageContainer");
 const spriteNameInput = document.getElementById("spriteName");
 const spriteMarginInput = document.getElementById("spriteMargin");
 const spriteExtrudeInput = document.getElementById("spriteExtrude");
+const exportBtn = document.getElementById("exportFormat");
 
 const spriteOutputLabel = document.getElementById("outputLabel");
 const dataOutput = document.getElementById("dataOutput");
 
-const previewBtn = document.getElementById("previewSprite")
-const downloadBtn = document.getElementById("downloadSprite")
-const exportBtn = document.getElementById("exportFormat")
+const previewBtn = document.getElementById("previewSprite");
+const downloadSpriteComp = document.getElementById("downloadSpriteComp");
 const resetBtn = document.getElementById("resetAll");
 
 const canvasZoom = document.getElementById("canvasZoom");
@@ -23,6 +22,7 @@ const canvas = document.getElementById("spriteCanvas");
 const copyBtn = document.getElementById("copyCode");
 
 let draggedImage = null;
+let currentDownloadConfig = { action: "both", format: "png" };
 
 // Drag & Drop events for the upload zone
 addImagesBtn.addEventListener("click", () => imageInput.click());
@@ -74,9 +74,13 @@ imageContainer?.addEventListener("dragover", (e) => {
   }
 });
 
+
 // UI Controls & Canvas Zoom
 previewBtn?.addEventListener("click", () => generateSprite(false));
-downloadBtn?.addEventListener("click", () => generateSprite(true));
+downloadSpriteComp?.addEventListener("execute", (ev) => {
+  currentDownloadConfig = ev.detail;
+  generateSprite(true);
+});
 exportBtn?.addEventListener("change", (e) => {
   if (spriteOutputLabel) spriteOutputLabel.innerText = `Output Data (${e.target.value.toUpperCase()})`;
 });
@@ -174,9 +178,9 @@ function getSettings() {
 
   const nameInput = spriteNameInput?.value.trim() ?? "";
   const baseName = nameInput !== "" ? nameInput : "sprite";
-  const format = exportBtn?.value ?? "css";
+  const dataFileFormat = exportBtn?.value ?? "css";
 
-  return { layout, margin, extrude, baseName, format };
+  return { layout, margin, extrude, baseName, format: dataFileFormat };
 }
 
 function processImages() {
@@ -206,9 +210,9 @@ function processImages() {
   return { images, spriteWidth, spriteHeight, margin, extrude, layout };
 }
 
-function generateSprite(download) {
+async function generateSprite(isDownloadTriggered = false) {
   const { images, spriteWidth, spriteHeight, margin, extrude, layout } = processImages();
-  const { baseName, format } = getSettings();
+  const { baseName, format: codeFormat } = getSettings();
 
   if (images.length === 0) {
     alert("Please add some images first.");
@@ -222,7 +226,7 @@ function generateSprite(download) {
   canvas.height = spriteHeight;
 
   // Trigger a resize based on current zoom setting
-  canvasZoom.dispatchEvent(new Event('input'));
+  canvasZoom.dispatchEvent(new Event("input"));
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   let cssStr = "";
@@ -266,7 +270,7 @@ function generateSprite(download) {
       offsetX += totalImgWidth + margin;
     }
 
-    // --- Draw Extrusion (Edge Bleed) ---
+    // Draw Extrusion (Edge Bleed)
     if (extrude > 0) {
       // Edges
       context.drawImage(img, 0, 0, img.width, 1, currentX + extrude, currentY, img.width, extrude); // Top
@@ -281,15 +285,15 @@ function generateSprite(download) {
       context.drawImage(img, img.width - 1, img.height - 1, 1, 1, currentX + extrude + img.width, currentY + extrude + img.height, extrude, extrude); // Bottom-Right
     }
 
-    // --- Draw Main Image ---
+    // Draw Main Image
     const actualImageX = currentX + extrude;
     const actualImageY = currentY + extrude;
     context.drawImage(img, actualImageX, actualImageY);
 
-    // --- Generate Data ---
+    // Generate Data
     const frameName = `${baseName}-${index}`;
 
-    if (format === "css") {
+    if (codeFormat === "css") {
       cssStr += `.${frameName} {\n  width: ${img.width}px;\n  height: ${img.height}px;\n  background: url("${baseName}.png") -${actualImageX}px -${actualImageY}px;\n}\n\n`;
     } else {
       jsonData.frames[frameName] = {
@@ -302,29 +306,87 @@ function generateSprite(download) {
     }
   });
 
-  const finalOutputText = format === "css" ? cssStr.trim() : JSON.stringify(jsonData, null, 2);
+  const finalOutputText = codeFormat === "css" ? cssStr.trim() : JSON.stringify(jsonData, null, 2);
   dataOutput.value = finalOutputText;
 
-  if (download) {
-    // 1. Download the Image
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${baseName}.png`;
-      link.click();
-      URL.revokeObjectURL(url);
+  if (isDownloadTriggered) {
+    const { action, format: imgFormat } = currentDownloadConfig;
 
-      // 2. Download the Code File (CSS or JSON)
-      const textBlob = new Blob([finalOutputText], {
-        type: format === "css" ? "text/css" : "application/json"
-      });
-      const textUrl = URL.createObjectURL(textBlob);
-      const textLink = document.createElement("a");
-      textLink.href = textUrl;
-      textLink.download = `${baseName}.${format}`;
-      textLink.click();
-      URL.revokeObjectURL(textUrl);
+    // Derived Mime Types
+    const codeMimeType = codeFormat === "css" ? "text/css" : "application/json";
+    const imageMimeType = `image/${imgFormat === 'jpg' ? 'jpeg' : imgFormat}`;
+
+    // 1. Download Both (Forced Fallback to Anchor)
+    if (action === "both") {
+      const blob = await getCanvasBlob(canvas, imageMimeType);
+
+      // Helper defined below
+      if (blob) downloadViaAnchor(blob, `${baseName}.${imgFormat}`, imageMimeType);
+      downloadViaAnchor(finalOutputText, `${baseName}.${codeFormat}`, codeMimeType);
+    }
+    // 2. Download Image Only (Uses FilePicker if available)
+    else if (action === "image") {
+      const blob = await getCanvasBlob(canvas, imageMimeType);
+      if (blob) await saveFile(blob, `${baseName}.${imgFormat}`, imgFormat);
+    }
+    // 3. Download Code Only (Uses FilePicker if available)
+    else if (action === "code") {
+      await saveFile(finalOutputText, `${baseName}.${codeFormat}`, codeFormat);
+    }
+  }
+}
+/**
+ * Helper to convert canvas.toBlob into a Promise for cleaner async/await flow.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {Promise<unknown>}
+ */
+function getCanvasBlob(canvas) {
+  return new Promise(resolve => canvas.toBlob(resolve));
+}
+
+/** Utility to handle simultaneous downloads via virtual anchor click */
+function downloadViaAnchor(data, filename, mimeType) {
+  const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Utility to handle single file download */
+async function saveFile(data, filename, format) {
+  // Determine mime type based on format
+  const mimeTypes = {
+    "css": "text/css",
+    "json": "application/json",
+    "png": "image/png"
+  };
+  const mimeType = mimeTypes[format] || "text/plain";
+
+  if (!Object.prototype.hasOwnProperty.call(window, "showSaveFilePicker")) {
+    // Fallback: Create blob, create URL, click anchor element, revoke URL
+    return downloadViaAnchor(data, filename, mimeType);
+  }
+
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: filename,
+      types: [{
+        description: `${format.toUpperCase()} File`,
+        accept: {
+          [mimeType]: [`.${format}`]
+        }
+      }]
     });
+
+    const writable = await handle.createWritable();
+    await writable.write(data);
+    await writable.close();
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error("Failed to save file:", err);
+    }
   }
 }

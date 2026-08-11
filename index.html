@@ -96,8 +96,17 @@
       <h2>3. Generate & Export</h2>
       <div class="button-group">
         <button id="previewSprite">Preview Sprite</button>
-        <button id="downloadSprite" class="primary">Download Files</button>
-        <button id="resetAll">Clear / Reset</button>
+
+        <split-button id="downloadSpriteComp">
+          <!-- Value format: "action:format" -->
+          <option value="both:png" selected>Download All</option>
+          <option value="image:png">Download PNG</option>
+          <option value="image:jpeg">Download JPEG</option>
+          <option value="image:webp">Download WEBP</option>
+          <option value="code:none">Download Code</option>
+        </split-button>
+
+        <button id="resetAll">Clear</button>
       </div>
 
       <!-- Smart Canvas Preview -->
@@ -126,6 +135,7 @@
     </div>
   </div>
 
+  <script src="./src/SplitButton.js"></script>
   <script src="./src/main.js"></script>
 </body>
 
