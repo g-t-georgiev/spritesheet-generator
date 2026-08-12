@@ -21,11 +21,12 @@ template.innerHTML = `
 
     .split-button-wrapper {
       display: inline-flex;
-      align-items: stretch;
       width: 100%;
     }
 
     button {
+      display: inline-block;
+      position: relative;
       background-color: var(--split-btn-color-bg-primary);
       color: var(--split-btn-color-text-secondary);
       padding: 10px 16px;
@@ -46,23 +47,39 @@ template.innerHTML = `
       flex-grow: 1;
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
-      border-right: 1px solid rgba(0, 0, 0, 0.2);
       border-top-left-radius: 6px;
       border-bottom-left-radius: 6px;
+      border-right: none;
+    }
+
+    .main-btn::after {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform-origin: center;
+      transform: translate(0, -50%);
+      height: 65%;
+      width: 1px;
+      background: rgba(255, 255, 255, .3);
     }
 
     .toggle-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 10px 8px;
+      padding: 10px 6px;
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
       border-top-right-radius: 6px;
       border-bottom-right-radius: 6px;
+      border-left: none;
     }
 
     .toggle-btn-arrow {
+      width: 14px;
+      height: 14px;
       transition: rotate 0.2s;
     }
 
