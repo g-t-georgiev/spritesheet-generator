@@ -1,4 +1,4 @@
-const template = document.createElement('template');
+const template = document.createElement("template");
 template.innerHTML = `
   <style>
     :host {
@@ -8,15 +8,16 @@ template.innerHTML = `
       box-sizing: border-box;
 
       --split-btn-color-bg-primary: var(--color-bg-primary);
-      --split-btn-color-bg-primary-hover: var(--color-bg-primary-hover);
-      --split-btn-color-bg-surface: var(--color-bg-surface);
-      --split-btn-color-bg-input-hover: var(--color-bg-input-hover);
+      --split-btn-color-bg-secondary: var(--color-bg-primary-hover);
+      --split-btn-color-bg-default: var(--color-bg-surface);
       --split-btn-color-border-primary: var(--color-border-primary);
-      --split-btn-color-border-primary-hover: var(--color-border-primary-hover);
+      --split-btn-color-border-secondary: var(--color-border-primary-hover);
       --split-btn-color-border-default: var(--color-border-default);
       --split-btn-color-shadow-panel: var(--color-shadow-panel);
       --splir-btn-color-text-primary: var(--color-text-primary);
       --split-btn-color-text-secondary: var(--color-text-secondary);
+      --split-btn-color-select-primary: var(--color-bg-primary);
+      --split-btn-color-select-secondary: var(--color-bg-input-hover);
     }
 
     .split-button-wrapper {
@@ -39,8 +40,8 @@ template.innerHTML = `
     }
 
     button:hover {
-      background-color: var(--split-btn-color-bg-primary-hover);
-      border-color: var(--split-btn-color-border-primary-hover);
+      background-color: var(--split-btn-color-bg-secondary);
+      border-color: var(--split-btn-color-border-secondary);
     }
 
     .main-btn {
@@ -88,11 +89,10 @@ template.innerHTML = `
       top: 100%;
       right: 0;
       margin: 1px 0 0 0;
-      background-color: var(--split-btn-color-bg-surface);
+      background-color: var(--split-btn-color-bg-default);
       border: 1px solid var(--split-btn-color-border-default);
       border-radius: 6px;
       box-shadow: 0 6px 16px var(--split-btn-color-shadow-panel);
-      width: calc(100% - 2px);
       z-index: 100;
       display: flex;
       flex-direction: column;
@@ -112,16 +112,12 @@ template.innerHTML = `
       transform: translateY(0);
     }
 
-    :host:has(.dropdown.show) .toggle-btn-arrow {
-      rotate: z 180deg;
-    }
-
     /* Style the slotted <option> elements */
     ::slotted(option) {
       display: block !important; /* Force block behavior */
       padding: 10px 15px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.8125rem;
       color: var(--split-btn-color-text-primary);
       transition: background-color 0.2s, color 0.2s;
       background-color: transparent;
@@ -129,18 +125,18 @@ template.innerHTML = `
     }
 
     ::slotted(option:hover) {
-      background-color: var(--split-btn-color-bg-input-hover);
+      background-color: var(--split-btn-color-select-secondary);
     }
 
     ::slotted(option[selected]) {
-      background-color: var(--split-btn-color-bg-primary);
+      background-color: var(--split-btn-color-select-primary);
       color: var(--split-btn-color-text-secondary);
-      font-weight: bold;
+      font-weight: 500;
     }
   </style>
 
   <div class="split-button-wrapper">
-    <button class="main-btn" id="mainBtn"></button>
+    <button class="main-btn" id="mainBtn">Download</button>
     <button class="toggle-btn" id="toggleBtn" aria-haspopup="true" aria-expanded="false" aria-label="Toggle options">
       <svg class="toggle-btn-arrow" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 9l6 6 6-6" />
@@ -177,11 +173,6 @@ class SplitButton extends HTMLElement {
     });
 
     this.mainBtn.addEventListener("click", this.triggerAction);
-
-    // Listen for slot changes to set initial button text
-    this.slotElement.addEventListener("slotchange", () => {
-      this.updateSelectedOption();
-    });
 
     // Event delegation for slotted options
     this.addEventListener("click", this.handleOptionClick);
@@ -220,17 +211,8 @@ class SplitButton extends HTMLElement {
     allOptions.forEach(opt => opt.removeAttribute("selected"));
     option.setAttribute("selected", "");
 
-    this.updateSelectedOption();
     this.closeDropdown();
-  }
-
-  updateSelectedOption() {
-    const allOptions = this.slotElement.assignedElements();
-    const selectedOption = allOptions.find((opt) => opt.hasAttribute("selected")) || allOptions[0];
-
-    if (selectedOption) {
-      this.mainBtn.textContent = selectedOption.textContent;
-    }
+    this.triggerAction();
   }
 
   triggerAction() {
