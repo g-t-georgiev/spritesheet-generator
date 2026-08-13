@@ -27,21 +27,25 @@ export default class SpriteGenerator {
     return { spriteWidth, spriteHeight };
   }
 
-  generate(images, settings) {
-    const { layout, margin, extrude, baseName, format: codeFormat } = settings;
+  generateCanvas(images, settings) {
+    if (!this.canvas) return;
+
+    if (!images || images.length === 0) {
+      this.clear();
+
+      return null;
+    }
+
+    const { layout, margin, extrude } = settings;
     const { spriteWidth, spriteHeight } = this.processDimensions(images, settings);
 
     this.canvas.width = spriteWidth;
     this.canvas.height = spriteHeight;
+    this.canvas.parentElement?.removeAttribute("hidden");
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    let cssStr = "";
-    let jsonData = {
-      frames: {},
-      meta: { image: `${baseName}.png`, format: "RGBA8888", size: { w: spriteWidth, h: spriteHeight }, scale: "1" }
-    };
-
     let offsetX = 0; let offsetY = 0; let rowHeight = 0;
+    const framesData = [];
 
     images.forEach((img, index) => {
       let currentX = 0; let currentY = 0;
@@ -65,32 +69,64 @@ export default class SpriteGenerator {
       const actualImageY = currentY + extrude;
       this.context.drawImage(img, actualImageX, actualImageY);
 
-      const frameName = `${baseName}-${index}`;
-      if (codeFormat === "css") {
-        cssStr += `.${frameName} {\n  width: ${img.width}px;\n  height: ${img.height}px;\n  background: url("${baseName}.png") -${actualImageX}px -${actualImageY}px;\n}\n\n`;
-      } else {
-        jsonData.frames[frameName] = {
-          frame: { x: actualImageX, y: actualImageY, w: img.width, h: img.height },
-          rotated: false, trimmed: false,
-          spriteSourceSize: { x: 0, y: 0, w: img.width, h: img.height },
-          sourceSize: { w: img.width, h: img.height }
-        };
-      }
+      framesData.push({
+        name: img.dataset.filename || `sprite-${index + 1}`,
+        x: actualImageX,
+        y: actualImageY,
+        w: img.width,
+        h: img.height
+      });
     });
 
-    const finalOutputText = codeFormat === "css" ? cssStr.trim() : JSON.stringify(jsonData, null, 2);
-    this.dataOutput.value = finalOutputText;
+    return { spriteWidth, spriteHeight, framesData };
+  }
 
-    return finalOutputText;
+  generateCode(metadata, settings, format) {
+    if (!metadata) {
+      if (this.dataOutput) this.dataOutput.value = "";
+
+      return "";
+    }
+
+    const { spriteWidth, spriteHeight, framesData } = metadata;
+    const { baseName } = settings;
+    const imgFileName = `${baseName}.png`;
+
+    let outputText = "";
+
+    if (format === "css") {
+      framesData.forEach(frame => {
+        outputText += `.${frame.name} {\n  width: ${frame.w}px;\n  height: ${frame.h}px;\n  background: url("${imgFileName}") -${frame.x}px -${frame.y}px;\n}\n\n`;
+      });
+    } else {
+      const jsonData = {
+        frames: {},
+        meta: { image: imgFileName, format: "RGBA8888", size: { w: spriteWidth, h: spriteHeight }, scale: "1" }
+      };
+
+      framesData.forEach(frame => {
+        jsonData.frames[frame.name] = {
+          frame: { x: frame.x, y: frame.y, w: frame.w, h: frame.h },
+          rotated: false, trimmed: false,
+          spriteSourceSize: { x: 0, y: 0, w: frame.w, h: frame.h },
+          sourceSize: { w: frame.w, h: frame.h }
+        };
+      });
+      outputText = JSON.stringify(jsonData, null, 2);
+    }
+
+    if (this.dataOutput) this.dataOutput.value = outputText.trim();
+
+    return outputText;
   }
 
   drawExtrusion(img, currentX, currentY, extrude) {
-    // Edges
+    // Draw extrusion on edges
     this.context.drawImage(img, 0, 0, img.width, 1, currentX + extrude, currentY, img.width, extrude);
     this.context.drawImage(img, 0, img.height - 1, img.width, 1, currentX + extrude, currentY + extrude + img.height, img.width, extrude);
     this.context.drawImage(img, 0, 0, 1, img.height, currentX, currentY + extrude, extrude, img.height);
     this.context.drawImage(img, img.width - 1, 0, 1, img.height, currentX + extrude + img.width, currentY + extrude, extrude, img.height);
-    // Corners
+    // Draw extrusion on corners
     this.context.drawImage(img, 0, 0, 1, 1, currentX, currentY, extrude, extrude);
     this.context.drawImage(img, img.width - 1, 0, 1, 1, currentX + extrude + img.width, currentY, extrude, extrude);
     this.context.drawImage(img, 0, img.height - 1, 1, 1, currentX, currentY + extrude + img.height, extrude, extrude);
@@ -103,6 +139,7 @@ export default class SpriteGenerator {
     this.canvas.height = 0;
     this.canvas.style.width = "";
     this.canvas.style.height = "";
+    this.canvas.parentElement.setAttribute("hidden", "");
     if (this.dataOutput) this.dataOutput.value = "";
   }
 }

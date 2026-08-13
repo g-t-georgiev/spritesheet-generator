@@ -14,7 +14,7 @@ template.innerHTML = `
       --split-btn-color-border-secondary: var(--color-border-primary-hover);
       --split-btn-color-border-default: var(--color-border-default);
       --split-btn-color-shadow-panel: var(--color-shadow-panel);
-      --splir-btn-color-text-primary: var(--color-text-primary);
+      --split-btn-color-text-primary: var(--color-text-primary);
       --split-btn-color-text-secondary: var(--color-text-secondary);
       --split-btn-color-select-primary: var(--color-bg-primary);
       --split-btn-color-select-secondary: var(--color-bg-input-hover);
@@ -187,28 +187,29 @@ class SplitButton extends HTMLElement {
 
   toggleDropdown() {
     const isShowing = this.dropdown.classList.contains("show");
-    if (isShowing) {
-      this.closeDropdown();
-    } else {
-      this.dropdown.classList.add("show");
-      this.toggleBtn.setAttribute("aria-expanded", "true");
-    }
+
+    if (isShowing) return this.closeDropdown();
+
+    this.dropdown.classList.add("show");
+    this.toggleBtn.setAttribute("aria-expanded", "true");
   }
 
   closeDropdown(ev) {
     // Check if click was inside the component using composed path
     if (ev && ev.composedPath().includes(this)) return;
+
     this.dropdown.classList.remove("show");
     this.toggleBtn.setAttribute("aria-expanded", "false");
   }
 
   handleOptionClick(ev) {
     const option = ev.target.closest("option");
+
     if (!option) return;
 
-    // Deselect all, select chosen
     const allOptions = this.slotElement.assignedElements();
     allOptions.forEach(opt => opt.removeAttribute("selected"));
+
     option.setAttribute("selected", "");
 
     this.closeDropdown();

@@ -35,7 +35,7 @@
     <h1>Spritesheet Generator</h1>
 
     <div class="panel">
-      <h2>1. Upload Images</h2>
+      <h2>Upload Images</h2>
       <!-- Drag and Drop Upload Zone -->
       <div id="dropZone" class="drop-zone">
         <p>Drag & Drop images here or</p>
@@ -45,20 +45,12 @@
         </div>
       </div>
 
-      <div id="imageContainer">
-        <!-- Placeholder text -->
-        <span class="placeholder">Your uploaded images will appear here</span>
-
-        <!-- Info icon & hint moved inside to anchor relative to imageContainer -->
-        <div class="hint">
-          <span class="info-icon">i</span>
-          <span class="hint-text">Customize images' order in the spritesheet by dragging the thumbnails below.</span>
-        </div>
-      </div>
+      <div class="uploaded-images" id="imageContainer"></div>
+      <div class="uploaded-images-placeholder">Your uploaded images will appear here</div>
     </div>
 
     <div class="panel">
-      <h2>2. Configuration</h2>
+      <h2>Configuration</h2>
 
       <div class="settings-grid">
         <div class="setting-item">
@@ -85,18 +77,19 @@
         </div>
       </div>
 
-      <div class="layout-options">
-        <label><input type="radio" name="layout" value="vertical" checked /> Vertical</label>
-        <label><input type="radio" name="layout" value="horizontal" /> Horizontal</label>
-        <label><input type="radio" name="layout" value="grid" /> Grid</label>
+      <div class="setting-item">
+        <span class="layout-options-label">Layout</span>
+        <div class="layout-options">
+          <label><input type="radio" name="layout" value="vertical" checked /> Vertical</label>
+          <label><input type="radio" name="layout" value="horizontal" /> Horizontal</label>
+          <label><input type="radio" name="layout" value="grid" /> Grid</label>
+        </div>
       </div>
     </div>
 
     <div class="panel actions">
-      <h2>3. Generate & Export</h2>
+      <h2>Generate & Export</h2>
       <div class="button-group">
-        <button id="previewSprite">Preview Sprite</button>
-
         <split-button id="downloadSpriteComp">
           <!-- Value format: "action:format" -->
           <option value="both:png" selected>Download PNG + Code</option>
@@ -116,7 +109,7 @@
         <span id="zoomValue">100%</span>
       </div>
       <div class="canvas-wrapper">
-        <canvas id="spriteCanvas"></canvas>
+        <canvas id="spriteCanvas" width="0" height="0"></canvas>
       </div>
     </div>
 
