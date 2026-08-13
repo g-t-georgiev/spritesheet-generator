@@ -9,33 +9,13 @@
 </head>
 
 <body>
-  <label class="theme-toggle" aria-label="Toggle color theme" title="Toggle color theme">
-    <input type="checkbox" />
-    <span class="theme-toggle__icon" aria-hidden="true">
-      <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4.5"></circle>
-        <path d="M12 2.5v2"></path>
-        <path d="M12 19.5v2"></path>
-        <path d="M4.5 12H2.5"></path>
-        <path d="M21.5 12h-2"></path>
-        <path d="M5.6 5.6l-1.4-1.4"></path>
-        <path d="M19.8 19.8l-1.4-1.4"></path>
-        <path d="M5.6 18.4l-1.4 1.4"></path>
-        <path d="M19.8 4.2l-1.4 1.4"></path>
-      </svg>
-      <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path>
-      </svg>
-    </span>
-  </label>
+  <theme-switcher></theme-switcher>
 
   <div class="container">
     <h1>Spritesheet Generator</h1>
 
     <div class="panel">
-      <h2>1. Upload Images</h2>
+      <h2>Upload Images</h2>
       <!-- Drag and Drop Upload Zone -->
       <div id="dropZone" class="drop-zone">
         <p>Drag & Drop images here or</p>
@@ -45,20 +25,12 @@
         </div>
       </div>
 
-      <div id="imageContainer">
-        <!-- Placeholder text -->
-        <span class="placeholder">Your uploaded images will appear here</span>
-
-        <!-- Info icon & hint moved inside to anchor relative to imageContainer -->
-        <div class="hint">
-          <span class="info-icon">i</span>
-          <span class="hint-text">Customize images' order in the spritesheet by dragging the thumbnails below.</span>
-        </div>
-      </div>
+      <div class="uploaded-images" id="imageContainer"></div>
+      <div class="uploaded-images-placeholder">Your uploaded images will appear here</div>
     </div>
 
     <div class="panel">
-      <h2>2. Configuration</h2>
+      <h2>Configuration</h2>
 
       <div class="settings-grid">
         <div class="setting-item">
@@ -85,19 +57,29 @@
         </div>
       </div>
 
-      <div class="layout-options">
-        <label><input type="radio" name="layout" value="vertical" checked /> Vertical</label>
-        <label><input type="radio" name="layout" value="horizontal" /> Horizontal</label>
-        <label><input type="radio" name="layout" value="grid" /> Grid</label>
+      <div class="setting-item">
+        <span class="layout-options-label">Layout</span>
+        <div class="layout-options">
+          <label><input type="radio" name="layout" value="vertical" checked /> Vertical</label>
+          <label><input type="radio" name="layout" value="horizontal" /> Horizontal</label>
+          <label><input type="radio" name="layout" value="grid" /> Grid</label>
+        </div>
       </div>
     </div>
 
     <div class="panel actions">
-      <h2>3. Generate & Export</h2>
+      <h2>Generate & Export</h2>
       <div class="button-group">
-        <button id="previewSprite">Preview Sprite</button>
-        <button id="downloadSprite" class="primary">Download Files</button>
-        <button id="resetAll">Clear / Reset</button>
+        <split-button id="downloadSpriteComp">
+          <!-- Value format: "action:format" -->
+          <option value="both:png" selected>Download PNG + Code</option>
+          <option value="image:png">Download PNG Only</option>
+          <option value="image:jpeg">Download JPEG Only</option>
+          <option value="image:webp">Download WEBP Only</option>
+          <option value="code:none">Download Code Only</option>
+        </split-button>
+
+        <button id="resetAll">Clear</button>
       </div>
 
       <!-- Smart Canvas Preview -->
@@ -107,7 +89,7 @@
         <span id="zoomValue">100%</span>
       </div>
       <div class="canvas-wrapper">
-        <canvas id="spriteCanvas"></canvas>
+        <canvas id="spriteCanvas" width="0" height="0"></canvas>
       </div>
     </div>
 
@@ -126,7 +108,7 @@
     </div>
   </div>
 
-  <script src="./src/main.js"></script>
+  <script type="module" src="./src/index.js"></script>
 </body>
 
 </html>
