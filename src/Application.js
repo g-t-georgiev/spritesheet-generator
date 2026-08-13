@@ -47,8 +47,6 @@ export default class Application {
 
   bindEvents() {
     this.uploader.onImagesChange = (action, images = []) => {
-      console.log(`action: ${action}, images: ${images?.length}`);
-
       if (!images?.length) {
         this.handleReset();
 
@@ -90,7 +88,6 @@ export default class Application {
       this.currentCanvasMetadata = this.generator.generateCanvas(images, settings);
       this.generator.generateCode(this.currentCanvasMetadata, settings, format);
 
-      console.trace("HERE");
       this.canvasZoom?.dispatchEvent(new Event("input"));
     };
 
@@ -193,7 +190,7 @@ export default class Application {
 
   handleZoom(ev) {
     const scale = ev.target.value;
-    console.log(scale);
+
     if (this.zoomValue) this.zoomValue.innerText = `${scale}%`;
 
     if (this.generator.canvas.width > 0) {
