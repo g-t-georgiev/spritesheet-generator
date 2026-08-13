@@ -1,5 +1,5 @@
-import "./SplitButton.js";
 import Application from "./Application.js";
+import "./components/SplitButton.js";
 
 document.addEventListener("DOMContentLoaded", main);
 
